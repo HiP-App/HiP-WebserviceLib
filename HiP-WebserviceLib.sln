@@ -1,0 +1,17 @@
+
+Microsoft Visual Studio Solution File, Format Version 15.00
+# Visual Studio 2017
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HiP-WebserviceLib", "HiP-WebserviceLib.csproj", "{EE159CF5-B9BE-4389-AE0C-677FB2399BF8}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{EE159CF5-B9BE-4389-AE0C-677FB2399BF8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EE159CF5-B9BE-4389-AE0C-677FB2399BF8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EE159CF5-B9BE-4389-AE0C-677FB2399BF8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EE159CF5-B9BE-4389-AE0C-677FB2399BF8}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
