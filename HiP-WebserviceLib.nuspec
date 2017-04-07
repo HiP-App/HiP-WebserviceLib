@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+  <metadata>
+    <id>hipapp-webservicelib</id>
+    <version>2017.04.07.01</version>
+    <title>WebserviceLip</title>
+    <authors>HiP-App</authors>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <copyright>Copyright 2017</copyright>
+  </metadata>
+</package>
