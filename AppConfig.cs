@@ -5,6 +5,8 @@ namespace PaderbornUniversity.SILab.Hip.Webservice
 {
     public class AppConfig
     {
+        // ReSharper disable InconsistentNaming
+
         public string DB_HOST { get; set; }
         public string DB_USERNAME { get; set; }
         public string DB_PASSWORD { get; set; }
