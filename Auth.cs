@@ -4,7 +4,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Security.Principal;
 
-namespace PaderbornUniversity.SILab.Hip.CmsApi.Utility
+namespace PaderbornUniversity.SILab.Hip.Webservice
 {
     public static class Auth
     {
