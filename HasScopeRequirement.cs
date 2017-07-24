@@ -11,8 +11,8 @@ namespace PaderbornUniversity.SILab.Hip.Webservice
 
         public HasScopeRequirement(string scope, string issuer)
         {
-            this._scope = scope;
-            this._issuer = issuer;
+            _scope = scope;
+            _issuer = issuer;
         }
 
         protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, HasScopeRequirement requirement)

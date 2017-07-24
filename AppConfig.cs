@@ -9,7 +9,7 @@ namespace PaderbornUniversity.SILab.Hip.Webservice
         public string DbUsername { get; set; }
         public string DbPassword { get; set; }
         public string DbName { get; set; }
-        public string CLIENT_ID { get; set; }
+        public string ClientId { get; set; }
         public string Domain { get; set; }
         public string EmailService { get; set; }
         public string AllowHttp { get; set; }
