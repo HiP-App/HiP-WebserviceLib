@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <Version>2.1.0</Version>
+	<Version Condition="'$(VersionSuffix)' != ''">$(Version)-$(VersionSuffix)</Version>
   </PropertyGroup>
 
   <PropertyGroup>
