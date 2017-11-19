@@ -5,17 +5,15 @@ namespace PaderbornUniversity.SILab.Hip.Webservice
 {
     public class AppConfig
     {
-        // ReSharper disable InconsistentNaming
-
-        public string DB_HOST { get; set; }
-        public string DB_USERNAME { get; set; }
-        public string DB_PASSWORD { get; set; }
-        public string DB_NAME { get; set; }
-        public string CLIENT_ID { get; set; }
-        public string DOMAIN { get; set; }
-        public string EMAIL_SERVICE { get; set; }
-        public string ALLOW_HTTP { get; set; }
-        public string ADMIN_EMAIL { get; set; }
+        public string DbHost { get; set; }
+        public string DbUsername { get; set; }
+        public string DbPassword { get; set; }
+        public string DbName { get; set; }
+        public string ClientId { get; set; }
+        public string Domain { get; set; }
+        public string EmailService { get; set; }
+        public string AllowHttp { get; set; }
+        public string AdminEmail { get; set; }
 
         public static string BuildConnectionString(IConfigurationRoot config)
         {
