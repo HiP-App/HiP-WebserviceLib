@@ -1,13 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Version>2.1.0</Version>
-	<Version Condition="'$(VersionSuffix)' != ''">$(Version)-$(VersionSuffix)</Version>
-  </PropertyGroup>
-
-  <PropertyGroup>
     <TargetFramework>netcoreapp1.1</TargetFramework>
     <RootNamespace>PaderbornUniversity.SILab.Hip.Webservice</RootNamespace>
+    <Version>2.1.1</Version>
+	<Version Condition="'$(VersionSuffix)' != ''">$(Version)-$(VersionSuffix)</Version>
+	<GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
