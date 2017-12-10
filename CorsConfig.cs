@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace PaderbornUniversity.SILab.Hip.DataStore.Utility
+namespace PaderbornUniversity.SILab.Hip.Webservice
 {
     public class CorsConfig
     {

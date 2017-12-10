@@ -6,7 +6,9 @@ namespace PaderbornUniversity.SILab.Hip.Webservice
     public static class RequestSchemeFixerExtensions
     {
         /// <summary>
-        /// Fixes the current request's scheme if an "X-Forwarded-Proto"-header is set.
+        /// Fixes the current request's scheme if an "X-Forwarded-Proto"-header is set. This call should
+        /// ideally be the first when configuring the request pipeline so that all other middlewares have
+        /// access to the correct request scheme.
         /// </summary>
         /// <remarks>
         /// Root issue: Clients send requests to our services via HTTPS, but nginx forwards these requests
