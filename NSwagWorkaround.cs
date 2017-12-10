@@ -1,6 +1,11 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
+using Microsoft.AspNetCore.Mvc.Authorization;
+using Microsoft.AspNetCore.Mvc.Controllers;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.AspNetCore.Mvc.Internal;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using NJsonSchema;
 using NSwag.AspNetCore.Middlewares;
@@ -48,17 +53,22 @@ namespace NSwag.AspNetCore
         /// (1) 'Title' is set to the name of the assembly (<paramref name="webApiAssembly"/>),
         /// (2) 'DefaultEnumHandling' is set to 'String',
         /// (3) 'DocExpansion' is set to "list",
-        /// (4) A post processor is assigned which adds a parameter for the HTTP "Authorization"-header to
-        ///     each Swagger operation and uses the repository's "README.md"-file as the API description.
+        /// (4) A parameter for the HTTP "Authorization"-header is added to each operation which needs
+        ///     authorization. The parameter is marked as 'required' unless the operation supports anonymous
+        ///     access (via [AllowAnonymous]-attribute).
+        /// (5) The repository's "README.md"-file is included as the API description.
         /// </param>
         /// <returns></returns>
         public static IApplicationBuilder UseSwaggerUiHip(this IApplicationBuilder app, Assembly webApiAssembly = null, Action<SwaggerUiSettings> configureSettings = null)
         {
             webApiAssembly = webApiAssembly ?? Assembly.GetEntryAssembly();
 
-            var settings = CreateDefaultSwaggerUiSettings(webApiAssembly);
+            // Create Swagger and Swagger UI configuration
+            var mvcRouting = app.ApplicationServices.GetService<IActionDescriptorCollectionProvider>();
+            var settings = CreateDefaultSwaggerUiSettings(webApiAssembly, mvcRouting);
             configureSettings?.Invoke(settings);
 
+            // Set up middlewares (code taken from NSwag)
             var controllerTypes = WebApiToSwaggerGenerator.GetControllerClasses(webApiAssembly);
             var schemaGenerator = new SwaggerJsonSchemaGenerator(settings);
             var actualSwaggerRoute = settings.SwaggerRoute.Substring(settings.MiddlewareBasePath?.Length ?? 0);
@@ -78,40 +88,65 @@ namespace NSwag.AspNetCore
             return app;
         }
 
-        private static SwaggerUiSettings CreateDefaultSwaggerUiSettings(Assembly webApiAssembly) => new SwaggerUiSettings
+        private static SwaggerUiSettings CreateDefaultSwaggerUiSettings(Assembly webApiAssembly, IActionDescriptorCollectionProvider mvcRouting)
         {
-            Title = webApiAssembly.GetName().Name,
-            DefaultEnumHandling = EnumHandling.String,
-            DocExpansion = "list",
-            PostProcess = doc =>
+            return new SwaggerUiSettings
             {
-                // Add a parameter for the "Authorization"-header to every operation
-                foreach (var op in doc.Operations)
+                Title = webApiAssembly.GetName().Name,
+                DefaultEnumHandling = EnumHandling.String,
+                DocExpansion = "list",
+                PostProcess = doc =>
                 {
-                    op.Operation.Parameters.Add(new SwaggerParameter
+                    // Add a parameter for the "Authorization"-header to every operation which needs
+                    // authorization. If there's an [AllowAnonymous]-attribute, make the parameter optional.
+                    foreach (var op in doc.Operations)
                     {
-                        Name = "Authorization",
-                        Kind = SwaggerParameterKind.Header,
-                        IsRequired = true
-                    });
-                }
+                        // Find the MVC controller action corresponding to the current Swagger operation
+                        var mvcAction = mvcRouting.ActionDescriptors.Items
+                            .OfType<ControllerActionDescriptor>()
+                            .FirstOrDefault(a =>
+                            {
+                                var constraint = a.ActionConstraints
+                                    .OfType<HttpMethodActionConstraint>()
+                                    .FirstOrDefault();
 
-                // If available, include the repository's "README.md" file as the API description
-                var readmeFile = new[] { "README.md", "../README.md" }
-                        .FirstOrDefault(file => File.Exists(file));
+                                return
+                                    $"{a.ControllerName}_{a.ActionName}" == op.Operation.OperationId &&
+                                    constraint?.HttpMethods != null &&
+                                    constraint.HttpMethods.Contains(op.Method.ToString().ToUpper());
+                            });
 
-                if (readmeFile != null)
-                {
-                    try
+                        var needsAuth = mvcAction.FilterDescriptors.Any(f => f.Filter is AuthorizeFilter);
+                        var allowAnonymous = mvcAction.FilterDescriptors.Any(f => f.Filter is AllowAnonymousFilter);
+
+                        if (needsAuth)
+                        {
+                            op.Operation.Parameters.Add(new SwaggerParameter
+                            {
+                                Name = "Authorization",
+                                Kind = SwaggerParameterKind.Header,
+                                IsRequired = !allowAnonymous
+                            });
+                        }
+                    }
+
+                    // If available, include the repository's "README.md" file as the API description
+                    var readmeFile = new[] { "README.md", "../README.md" }
+                            .FirstOrDefault(file => File.Exists(file));
+
+                    if (readmeFile != null)
                     {
-                        doc.Info.Description = File.ReadAllText(readmeFile);
-                    }
-                    catch
-                    { // Couldn't read "README.md"-file
+                        try
+                        {
+                            doc.Info.Description = File.ReadAllText(readmeFile);
+                        }
+                        catch
+                        { // Couldn't read "README.md"-file
+                        }
                     }
                 }
-            }
-        };
+            };
+        }
 
         /// <summary>
         /// Workaround 1): Redirect to the correct ".../swagger/index.html"-URL when ".../swagger" is requested.
@@ -139,7 +174,9 @@ namespace NSwag.AspNetCore
                     context.Response.Headers.Add("Location", targetUrl);
                 }
                 else
+                {
                     await _nextDelegate.Invoke(context);
+                }
             }
         }
 
@@ -184,7 +221,9 @@ namespace NSwag.AspNetCore
                     await context.Response.WriteAsync(html);
                 }
                 else
+                {
                     await _nextDelegate(context);
+                }
             }
 
             private static readonly string _htmlTemplate = @"<!DOCTYPE html>
