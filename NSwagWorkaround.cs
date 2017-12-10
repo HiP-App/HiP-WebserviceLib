@@ -7,6 +7,8 @@ using NSwag.AspNetCore.Middlewares;
 using NSwag.SwaggerGeneration;
 using NSwag.SwaggerGeneration.WebApi;
 using System;
+using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 
@@ -47,7 +49,7 @@ namespace NSwag.AspNetCore
         /// (2) 'DefaultEnumHandling' is set to 'String',
         /// (3) 'DocExpansion' is set to "list",
         /// (4) A post processor is assigned which adds a parameter for the HTTP "Authorization"-header to
-        ///     each Swagger operation
+        ///     each Swagger operation and uses the repository's "README.md"-file as the API description.
         /// </param>
         /// <returns></returns>
         public static IApplicationBuilder UseSwaggerUiHip(this IApplicationBuilder app, Assembly webApiAssembly = null, Action<SwaggerUiSettings> configureSettings = null)
@@ -92,6 +94,21 @@ namespace NSwag.AspNetCore
                         Kind = SwaggerParameterKind.Header,
                         IsRequired = true
                     });
+                }
+
+                // If available, include the repository's "README.md" file as the API description
+                var readmeFile = new[] { "README.md", "../README.md" }
+                        .FirstOrDefault(file => File.Exists(file));
+
+                if (readmeFile != null)
+                {
+                    try
+                    {
+                        doc.Info.Description = File.ReadAllText(readmeFile);
+                    }
+                    catch
+                    { // Couldn't read "README.md"-file
+                    }
                 }
             }
         };
