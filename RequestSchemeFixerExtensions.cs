@@ -22,7 +22,6 @@ namespace PaderbornUniversity.SILab.Hip.Webservice
                 if (context.Request.Headers.TryGetValue("X-Forwarded-Proto", out var xproto))
                     context.Request.Scheme = xproto;
                 await next();
-
             });
         }
     }
