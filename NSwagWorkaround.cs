@@ -36,7 +36,7 @@ namespace NSwag.AspNetCore
     public static class NSwagExtensions
     {
         /// <summary>
-        /// Integrates Swagger and Swagger UI into the pipeline.
+        /// Integrates Swagger and Swagger UI into the pipeline using some HiP-related customizations.
         /// </summary>
         /// <param name="app"></param>
         /// <param name="webApiAssembly">
