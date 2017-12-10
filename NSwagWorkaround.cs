@@ -33,7 +33,7 @@ namespace NSwag.AspNetCore
     /// 
     /// The code in this file is mostly copy-pasted from the NSwag repository with some minor modifications.
     /// </remarks>
-    static class NSwagExtensions
+    public static class NSwagExtensions
     {
         /// <summary>
         /// Integrates Swagger and Swagger UI into the pipeline.
