@@ -110,23 +110,30 @@ namespace NSwag.AspNetCore
                                     .OfType<HttpMethodActionConstraint>()
                                     .FirstOrDefault();
 
+                                var actionName = a.ActionName.EndsWith("Async")
+                                    ? a.ActionName.Substring(0, a.ActionName.Length - "Async".Length)
+                                    : a.ActionName;
+
                                 return
-                                    $"{a.ControllerName}_{a.ActionName}" == op.Operation.OperationId &&
+                                    $"{a.ControllerName}_{actionName}" == op.Operation.OperationId &&
                                     constraint?.HttpMethods != null &&
                                     constraint.HttpMethods.Contains(op.Method.ToString().ToUpper());
                             });
 
-                        var needsAuth = mvcAction.FilterDescriptors.Any(f => f.Filter is AuthorizeFilter);
-                        var allowAnonymous = mvcAction.FilterDescriptors.Any(f => f.Filter is AllowAnonymousFilter);
-
-                        if (needsAuth)
+                        if (mvcAction != null)
                         {
-                            op.Operation.Parameters.Add(new SwaggerParameter
+                            var needsAuth = mvcAction.FilterDescriptors.Any(f => f.Filter is AuthorizeFilter);
+                            var allowAnonymous = mvcAction.FilterDescriptors.Any(f => f.Filter is AllowAnonymousFilter);
+
+                            if (needsAuth)
                             {
-                                Name = "Authorization",
-                                Kind = SwaggerParameterKind.Header,
-                                IsRequired = !allowAnonymous
-                            });
+                                op.Operation.Parameters.Add(new SwaggerParameter
+                                {
+                                    Name = "Authorization",
+                                    Kind = SwaggerParameterKind.Header,
+                                    IsRequired = !allowAnonymous
+                                });
+                            }
                         }
                     }
 
