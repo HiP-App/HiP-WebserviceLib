@@ -7,7 +7,7 @@ namespace PaderbornUniversity.SILab.Hip.Webservice
     /// </summary>
     public class CorsConfig
     {
-        public Dictionary<string, CorsEnvironmentConfig> Cors { get; set; }
+        public virtual Dictionary<string, CorsEnvironmentConfig> Cors { get; set; }
     }
 
     public class CorsEnvironmentConfig
