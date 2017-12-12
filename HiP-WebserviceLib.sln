@@ -1,6 +1,7 @@
 
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2017
+# Visual Studio 15
+VisualStudioVersion = 15.0.26228.9
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HiP-WebserviceLib", "HiP-WebserviceLib.csproj", "{EE159CF5-B9BE-4389-AE0C-677FB2399BF8}"
 EndProject
 Global
