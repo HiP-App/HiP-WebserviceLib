@@ -10,8 +10,10 @@ using Microsoft.Extensions.FileProviders;
 using NJsonSchema;
 using NSwag.AspNetCore.Middlewares;
 using NSwag.SwaggerGeneration;
+using NSwag.SwaggerGeneration.Processors.Security;
 using NSwag.SwaggerGeneration.WebApi;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -125,14 +127,18 @@ namespace NSwag.AspNetCore
                             var needsAuth = mvcAction.FilterDescriptors.Any(f => f.Filter is AuthorizeFilter);
                             var allowAnonymous = mvcAction.FilterDescriptors.Any(f => f.Filter is AllowAnonymousFilter);
 
-                            if (needsAuth)
+                            if (needsAuth && !allowAnonymous)
                             {
-                                op.Operation.Parameters.Add(new SwaggerParameter
+                                var requirement = new SwaggerSecurityRequirement() { { "Bearer", Enumerable.Empty<string>() } };
+
+                                if (op.Operation.Security == null)
                                 {
-                                    Name = "Authorization",
-                                    Kind = SwaggerParameterKind.Header,
-                                    IsRequired = !allowAnonymous
-                                });
+                                    op.Operation.Security = new List<SwaggerSecurityRequirement>() { requirement };
+                                }
+                                else
+                                {
+                                    op.Operation.Security.Add(requirement);
+                                }
                             }
                         }
                     }
@@ -151,6 +157,17 @@ namespace NSwag.AspNetCore
                         { // Couldn't read "README.md"-file
                         }
                     }
+
+                },
+                DocumentProcessors =
+                {
+                    new SecurityDefinitionAppender("Bearer", new SwaggerSecurityScheme()
+                    {
+                        In = SwaggerSecurityApiKeyLocation.Header,
+                        Type = SwaggerSecuritySchemeType.ApiKey,
+                        Name= "Authorization",
+                        Description = "Please insert JWT with Bearer into field"
+                    })
                 }
             };
         }
