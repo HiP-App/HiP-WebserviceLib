@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>PaderbornUniversity.SILab.Hip.Webservice</RootNamespace>
     <NoWarn>1701;1702;1705;1591</NoWarn>
-    <Version>3.0.3</Version>
+    <Version>3.1.0</Version>
     <Version Condition="'$(VersionSuffix)' != ''">$(Version)-$(VersionSuffix)</Version>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
