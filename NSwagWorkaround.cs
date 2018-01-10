@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
-using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Internal;
@@ -10,6 +9,7 @@ using Microsoft.Extensions.FileProviders;
 using NJsonSchema;
 using NSwag.AspNetCore.Middlewares;
 using NSwag.SwaggerGeneration;
+using NSwag.SwaggerGeneration.Processors.Security;
 using NSwag.SwaggerGeneration.WebApi;
 using System;
 using System.IO;
@@ -53,10 +53,9 @@ namespace NSwag.AspNetCore
         /// (1) 'Title' is set to the name of the assembly (<paramref name="webApiAssembly"/>),
         /// (2) 'DefaultEnumHandling' is set to 'String',
         /// (3) 'DocExpansion' is set to "list",
-        /// (4) A parameter for the HTTP "Authorization"-header is added to each operation which needs
-        ///     authorization. The parameter is marked as 'required' unless the operation supports anonymous
-        ///     access (via [AllowAnonymous]-attribute).
-        /// (5) The repository's "README.md"-file is included as the API description.
+        /// (4) A security scheme is added for supporting the "Authorize"-button,
+        /// (5) A security scope is added to every operation (note that this is also done for operations which have the [AllowAnonymous] attribute) 
+        /// (6) The repository's "README.md"-file is included as the API description.
         /// </param>
         /// <returns></returns>
         public static IApplicationBuilder UseSwaggerUiHip(this IApplicationBuilder app, Assembly webApiAssembly = null, Action<SwaggerUiSettings> configureSettings = null)
@@ -119,22 +118,6 @@ namespace NSwag.AspNetCore
                                     constraint?.HttpMethods != null &&
                                     constraint.HttpMethods.Contains(op.Method.ToString().ToUpper());
                             });
-
-                        if (mvcAction != null)
-                        {
-                            var needsAuth = mvcAction.FilterDescriptors.Any(f => f.Filter is AuthorizeFilter);
-                            var allowAnonymous = mvcAction.FilterDescriptors.Any(f => f.Filter is AllowAnonymousFilter);
-
-                            if (needsAuth)
-                            {
-                                op.Operation.Parameters.Add(new SwaggerParameter
-                                {
-                                    Name = "Authorization",
-                                    Kind = SwaggerParameterKind.Header,
-                                    IsRequired = !allowAnonymous
-                                });
-                            }
-                        }
                     }
 
                     // If available, include the repository's "README.md" file as the API description
@@ -151,6 +134,21 @@ namespace NSwag.AspNetCore
                         { // Couldn't read "README.md"-file
                         }
                     }
+
+                },
+                DocumentProcessors =
+                {
+                    new SecurityDefinitionAppender("Bearer", new SwaggerSecurityScheme()
+                    {
+                        In = SwaggerSecurityApiKeyLocation.Header,
+                        Type = SwaggerSecuritySchemeType.ApiKey,
+                        Name= "Authorization",
+                        Description = "Please insert JWT with Bearer into field"
+                    })
+                },
+                OperationProcessors =
+                {
+                    new OperationSecurityScopeProcessor()
                 }
             };
         }
