@@ -4,7 +4,7 @@ using System.Text;
 
 namespace PaderbornUniversity.SILab.Hip.Webservice.Logging
 {
-    public class HipLogConfig
+    public class HipLoggingConfig
     {
         public string Host { set; get; }
         public int Port { set; get; }
