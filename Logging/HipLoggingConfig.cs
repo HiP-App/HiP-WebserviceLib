@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace PaderbornUniversity.SILab.Hip.Webservice.Logging
+﻿namespace PaderbornUniversity.SILab.Hip.Webservice.Logging
 {
     public class HipLoggingConfig
     {
