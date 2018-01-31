@@ -5,7 +5,7 @@ namespace PaderbornUniversity.SILab.Hip.Webservice.Logging
 {
     public static class LoggerFactoryExtensions
         {
-        public static ILoggerFactory AddHipLogger (this ILoggerFactory loggerFactory, HipLoggingConfig config)
+        public static ILoggerFactory AddHipLogger (this ILoggerFactory loggerFactory, LoggingConfig config)
             {
             return loggerFactory.AddGelf (new GelfLoggerOptions
                 {
