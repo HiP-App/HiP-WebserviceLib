@@ -58,7 +58,7 @@ namespace NSwag.AspNetCore
         /// (6) The repository's "README.md"-file is included as the API description.
         /// </param>
         /// <returns></returns>
-        public static IApplicationBuilder UseSwaggerUiHip(this IApplicationBuilder app, Assembly webApiAssembly = null, Action<SwaggerUiSettings> configureSettings = null)
+        public static IApplicationBuilder UseSwaggerUiHip(this IApplicationBuilder app, Assembly webApiAssembly = null, Action<SwaggerUiSettings<WebApiToSwaggerGeneratorSettings>> configureSettings = null)
         {
             webApiAssembly = webApiAssembly ?? Assembly.GetEntryAssembly();
 
@@ -69,15 +69,17 @@ namespace NSwag.AspNetCore
 
             // Set up middlewares (code taken from NSwag)
             var controllerTypes = WebApiToSwaggerGenerator.GetControllerClasses(webApiAssembly);
-            var schemaGenerator = new SwaggerJsonSchemaGenerator(settings);
+            var schemaGenerator = new SwaggerJsonSchemaGenerator(settings.GeneratorSettings);
             var actualSwaggerRoute = settings.SwaggerRoute.Substring(settings.MiddlewareBasePath?.Length ?? 0);
             var actualSwaggerUiRoute = settings.SwaggerUiRoute.Substring(settings.MiddlewareBasePath?.Length ?? 0);
 
             if (controllerTypes != null)
-                app.UseMiddleware<SwaggerMiddleware>(actualSwaggerRoute, controllerTypes, settings, schemaGenerator);
+                app.UseMiddleware<WebApiToSwaggerMiddleware>(actualSwaggerRoute, controllerTypes, settings, schemaGenerator ?? new SwaggerJsonSchemaGenerator(settings.GeneratorSettings));
+
 
             app.UseMiddleware<RedirectMiddleware>(actualSwaggerUiRoute, actualSwaggerRoute);
-            app.UseMiddleware<SwaggerUiIndexMiddleware>(actualSwaggerUiRoute + "/index.html", settings, "NSwag.AspNetCore.SwaggerUi.index.html");
+            app.UseMiddleware<SwaggerUiIndexMiddleware<WebApiToSwaggerGeneratorSettings>>(actualSwaggerUiRoute + "/index.html", settings, "NSwag.AspNetCore.SwaggerUi.index.html");
+
             app.UseFileServer(new FileServerOptions
             {
                 RequestPath = new PathString(actualSwaggerUiRoute),
@@ -87,12 +89,10 @@ namespace NSwag.AspNetCore
             return app;
         }
 
-        private static SwaggerUiSettings CreateDefaultSwaggerUiSettings(Assembly webApiAssembly, IActionDescriptorCollectionProvider mvcRouting)
+        private static SwaggerUiSettings<WebApiToSwaggerGeneratorSettings> CreateDefaultSwaggerUiSettings(Assembly webApiAssembly, IActionDescriptorCollectionProvider mvcRouting)
         {
-            return new SwaggerUiSettings
+            var settings = new SwaggerUiSettings<WebApiToSwaggerGeneratorSettings>
             {
-                Title = webApiAssembly.GetName().Name,
-                DefaultEnumHandling = EnumHandling.String,
                 DocExpansion = "list",
                 PostProcess = doc =>
                 {
@@ -120,6 +120,9 @@ namespace NSwag.AspNetCore
                             });
                     }
 
+                    // Include the title 
+                    doc.Info.Title = webApiAssembly.GetName().Name;
+
                     // If available, include the repository's "README.md" file as the API description
                     var readmeFile = new[] { "README.md", "../README.md" }
                             .FirstOrDefault(file => File.Exists(file));
@@ -135,22 +138,21 @@ namespace NSwag.AspNetCore
                         }
                     }
 
-                },
-                DocumentProcessors =
-                {
-                    new SecurityDefinitionAppender("Bearer", new SwaggerSecurityScheme()
-                    {
-                        In = SwaggerSecurityApiKeyLocation.Header,
-                        Type = SwaggerSecuritySchemeType.ApiKey,
-                        Name= "Authorization",
-                        Description = "Please insert JWT with Bearer into field"
-                    })
-                },
-                OperationProcessors =
-                {
-                    new OperationSecurityScopeProcessor()
                 }
             };
+
+            settings.GeneratorSettings.DocumentProcessors.Add(new SecurityDefinitionAppender("Bearer", new SwaggerSecurityScheme()
+            {
+                In = SwaggerSecurityApiKeyLocation.Header,
+                Type = SwaggerSecuritySchemeType.ApiKey,
+                Name = "Authorization",
+                Description = "Please insert JWT with Bearer into field"
+            }));
+
+            settings.GeneratorSettings.OperationProcessors.Add(new OperationSecurityScopeProcessor());
+            settings.GeneratorSettings.DefaultEnumHandling = EnumHandling.String;
+
+            return settings;
         }
 
         /// <summary>
@@ -189,14 +191,14 @@ namespace NSwag.AspNetCore
         /// Workaround 2): Replace the default sample URL (Swagger Petstore) with the correct URL to our service
         /// when serving the Swagger UI page.
         /// </summary>
-        internal class SwaggerUiIndexMiddleware
+        internal class SwaggerUiIndexMiddleware<T> where T : SwaggerGeneratorSettings, new()
         {
             private readonly RequestDelegate _nextDelegate;
             private readonly string _indexPath;
-            private readonly SwaggerUiSettingsBase _settings;
+            private readonly SwaggerUiSettingsBase<T> _settings;
             private readonly string _resourcePath;
 
-            public SwaggerUiIndexMiddleware(RequestDelegate nextDelegate, string indexPath, SwaggerUiSettingsBase settings, string resourcePath)
+            public SwaggerUiIndexMiddleware(RequestDelegate nextDelegate, string indexPath, SwaggerUiSettingsBase<T> settings, string resourcePath)
             {
                 _nextDelegate = nextDelegate;
                 _indexPath = indexPath;
